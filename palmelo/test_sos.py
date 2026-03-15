@@ -3,6 +3,7 @@ import mediapipe as mp
 import pickle
 import os
 from gtts import gTTS
+import pygame
 import time
 import winsound
 
@@ -18,6 +19,8 @@ PHRASES = {
 with open("models/gesture_model.pkl", "rb") as f:
     model = pickle.load(f)
 
+pygame.mixer.init()
+
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
 hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.7)
@@ -29,6 +32,20 @@ last_time = 0
 cooldown = 3
 sos_active = False
 
+def speak(phrase):
+    try:
+        pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
+        time.sleep(0.1)
+        tts = gTTS(text=phrase, lang='en')
+        tts.save("temp_audio.mp3")
+        pygame.mixer.music.load("temp_audio.mp3")
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.1)
+    except Exception as e:
+        print(f"Audio error: {e}")
+
 print("Show gestures! Show BOTH HANDS for SOS! Press Q to quit")
 
 while True:
@@ -39,14 +56,17 @@ while True:
 
     label = ""
 
-    # SOS — both hands visible
     if result.multi_hand_landmarks and len(result.multi_hand_landmarks) == 2:
         sos_active = True
-        # Flash red screen
-        cv2.rectangle(frame, (0, 0), (frame.shape[1], frame.shape[0]), (0, 0, 255), -1)
-        cv2.putText(frame, "SOS ALERT!", (100, 250),
-                    cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 5)
-        # Beep alarm
+        # Full red screen
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (frame.shape[1], frame.shape[0]), (0, 0, 255), -1)
+        cv2.addWeighted(overlay, 0.6, frame, 0.4, 0, frame)
+        # SOS text
+        cv2.putText(frame, "SOS ALERT!", (80, 200),
+                    cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 6)
+        cv2.putText(frame, "EMERGENCY TRIGGERED", (60, 280),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         winsound.Beep(1000, 500)
         print("SOS TRIGGERED!")
 
@@ -60,18 +80,17 @@ while True:
 
         if prediction != last_spoken or time.time() - last_time > cooldown:
             phrase = PHRASES.get(prediction, prediction)
-            tts = gTTS(text=phrase, lang='en')
-            tts.save("temp_audio.mp3")
-            os.system("start temp_audio.mp3")
+            speak(phrase)
             last_spoken = prediction
             last_time = time.time()
 
         mp_draw.draw_landmarks(frame, result.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
         cv2.rectangle(frame, (0, 0), (500, 60), (0, 0, 0), -1)
-        cv2.putText(frame, f"Gesture: {label}", (10, 40),
+        cv2.putText(frame, f"Gesture: {label} ({confidence:.1f}%)", (10, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     else:
+        sos_active = False
         cv2.rectangle(frame, (0, 0), (500, 60), (0, 0, 0), -1)
         cv2.putText(frame, "No hand detected", (10, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
