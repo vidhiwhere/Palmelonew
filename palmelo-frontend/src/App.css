@@ -217,3 +217,84 @@ body {
   border-radius: 8px; transition: all 0.2s;
 }
 .nav-logout:hover { color: #ff6b6b; background: #fff5f5; }
+
+.main-single {
+  padding: 24px 32px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+.camera-section.full { width: 100%; }
+
+.nav-icon-btn {
+  background: none; border: none; cursor: pointer;
+  color: #868e96; padding: 7px;
+  display: flex; align-items: center;
+  border-radius: 8px; transition: all 0.2s;
+  border: 1px solid #e9ecef;
+}
+.nav-icon-btn:hover { color: #00b894; border-color: #00b894; background: #e6fdf5; }
+.nav-icon-btn.danger:hover { color: #ff6b6b; border-color: #ff6b6b; background: #fff5f5; }
+
+.welcome-bar {
+  background: #e6fdf5; color: #00b894;
+  padding: 8px 24px; font-size: 0.85rem;
+  border-bottom: 1px solid #c3f0e0;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.welcome-chat-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: #00b894; color: #fff;
+  border: none; border-radius: 16px;
+  padding: 4px 12px; font-size: 0.78rem;
+  font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.welcome-chat-btn:hover { background: #00a381; }
+
+.gesture-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-top: 0;
+}
+
+.quick-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.quick-stat {
+  background: #fff; border-radius: 14px;
+  border: 1px solid #f0ede8;
+  padding: 16px; display: flex;
+  flex-direction: column; align-items: center;
+  gap: 4px; text-align: center;
+}
+.qs-icon { font-size: 1.4rem; }
+.qs-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.qs-val { font-size: 1rem; font-weight: 700; color: #1a1a2e; }
+
+.gesture-guide {
+  background: #fff; border-radius: 16px;
+  border: 1px solid #f0ede8; padding: 20px;
+  margin-top: 16px;
+}
+.guide-title {
+  font-size: 0.75rem; font-weight: 700;
+  color: #aaa; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 14px;
+}
+.guide-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+}
+.guide-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  padding: 12px 8px; border-radius: 12px;
+  border: 1.5px solid #f0ede8;
+  text-align: center; transition: all 0.2s;
+}
+.guide-item.active {
+  border-color: #00b894; background: #e6fdf5;
+}
+.guide-emoji { font-size: 1.6rem; }
+.guide-name { font-size: 0.78rem; font-weight: 700; color: #1a1a2e; }
+.guide-desc { font-size: 0.68rem; color: #aaa; }

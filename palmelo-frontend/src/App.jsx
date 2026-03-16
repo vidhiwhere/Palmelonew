@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { db, auth } from "./firebase";
-import { ref, push, onValue, query, limitToLast } from "firebase/database";
+import { auth } from "./firebase";
 import { signOut } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, Send, AlertTriangle, Hand, MessageCircle, Activity, LogOut, User } from "lucide-react";
+import { Mic, MicOff, AlertTriangle, Hand, Activity, LogOut, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import "./App.css";
+import { BookOpen } from "lucide-react";
 
 const COOLDOWN = 3000;
 
@@ -20,11 +20,8 @@ export default function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [gesture, setGesture] = useState(null);
   const [sos, setSos] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [replyText, setReplyText] = useState("");
   const [lang, setLang] = useState("en");
   const [confidence, setConfidence] = useState(0);
-  const chatEndRef = useRef(null);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -34,35 +31,11 @@ export default function App() {
     hi: { hello: "नमस्ते!", yes: "हाँ!", no: "नहीं!", thankyou: "धन्यवाद!", help: "मुझे मदद चाहिए!" }
   };
 
-  useEffect(() => {
-    const msgRef = query(ref(db, "messages"), limitToLast(30));
-    const unsub = onValue(msgRef, (snap) => {
-      const data = snap.val();
-      if (data) setMessages(Object.values(data));
-      else setMessages([]);
-    });
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
     utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
-  };
-
-  const sendToFirebase = (sender, message, isSos = false) => {
-    push(ref(db, "messages"), {
-      sender,
-      message,
-      sos: isSos,
-      timestamp: Date.now(),
-      userName: user?.displayName || user?.email || "User"
-    });
   };
 
   const captureAndDetect = useCallback(async () => {
@@ -89,13 +62,10 @@ export default function App() {
           setGesture(data.gesture);
           setConfidence(data.confidence);
           setSos(false);
-
           const now = Date.now();
           const phrase = PHRASES[lang][data.gesture] || data.phrase;
-
           if (data.gesture !== lastSpokenRef.current || now - lastTimeRef.current > COOLDOWN) {
             speak(phrase);
-            sendToFirebase("signer", phrase);
             lastSpokenRef.current = data.gesture;
             lastTimeRef.current = now;
           }
@@ -131,12 +101,6 @@ export default function App() {
     setSos(false);
   };
 
-  const sendReply = () => {
-    if (!replyText.trim()) return;
-    sendToFirebase("reply", replyText.trim());
-    setReplyText("");
-  };
-
   const handleLogout = async () => {
     stopCamera();
     await signOut(auth);
@@ -156,6 +120,9 @@ export default function App() {
           <span className="tagline">Sign Language to Speech</span>
         </div>
         <div className="header-right">
+          <button className="nav-icon-btn" onClick={() => navigate("/learn")} title="Learn">
+  <BookOpen size={17} />
+</button>
           <select className="lang-select" value={lang} onChange={e => setLang(e.target.value)}>
             <option value="en">🇬🇧 English</option>
             <option value="hi">🇮🇳 Hindi</option>
@@ -166,18 +133,22 @@ export default function App() {
             {isRunning ? "Live" : "Offline"}
           </div>
 
-          {/* Profile button */}
-          <button className="profile-btn" onClick={() => navigate("/profile")} title="View profile">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="avatar" className="nav-avatar" />
-            ) : (
-              <div className="nav-avatar-initials">{initials}</div>
-            )}
+          {/* Messages button */}
+          <button className="nav-icon-btn" onClick={() => navigate("/chat")} title="Messages">
+            <MessageSquare size={17} />
+          </button>
+
+          {/* Profile */}
+          <button className="profile-btn" onClick={() => navigate("/profile")} title="Profile">
+            {user?.photoURL
+              ? <img src={user.photoURL} alt="avatar" className="nav-avatar" />
+              : <div className="nav-avatar-initials">{initials}</div>
+            }
           </button>
 
           {/* Logout */}
-          <button className="nav-logout" onClick={handleLogout} title="Sign out">
-            <LogOut size={15} />
+          <button className="nav-icon-btn danger" onClick={handleLogout} title="Sign out">
+            <LogOut size={17} />
           </button>
         </div>
       </header>
@@ -185,14 +156,18 @@ export default function App() {
       {/* Welcome bar */}
       <div className="welcome-bar">
         👋 Welcome back, <strong>{user?.displayName || user?.email}</strong>!
+        <button className="welcome-chat-btn" onClick={() => navigate("/chat")}>
+          <MessageSquare size={13} /> Open Messages
+        </button>
       </div>
 
-      <main className="main">
-        {/* Left — Camera */}
-        <section className="camera-section">
+      <main className="main-single">
+        {/* Camera section — full width */}
+        <section className="camera-section full">
           <div className="section-label">
-            <Activity size={14} /> Live Camera
+            <Activity size={14} /> Live Gesture Detection
           </div>
+
           <div className="video-wrapper">
             <video ref={videoRef} className="video" muted playsInline />
             <canvas ref={canvasRef} style={{ display: "none" }} />
@@ -214,88 +189,80 @@ export default function App() {
           <div className="camera-controls">
             <button className={`btn-primary ${isRunning ? "danger" : ""}`}
               onClick={isRunning ? stopCamera : startCamera}>
-              {isRunning ? <><MicOff size={16} /> Stop</> : <><Mic size={16} /> Start Camera</>}
+              {isRunning ? <><MicOff size={16} /> Stop Camera</> : <><Mic size={16} /> Start Camera</>}
             </button>
           </div>
 
-          <AnimatePresence mode="wait">
-            {gesture ? (
-              <motion.div key={gesture} className="gesture-card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}>
-                <div className="gesture-emoji">🤟</div>
-                <div className="gesture-name">{gesture}</div>
-                <div className="gesture-phrase">{PHRASES[lang][gesture]}</div>
-                <div className="confidence-bar-wrapper">
-                  <div className="confidence-bar" style={{ width: `${confidence}%` }} />
-                </div>
-                <div className="confidence-label">{confidence}% confidence</div>
-              </motion.div>
-            ) : (
-              <motion.div key="empty" className="gesture-card empty"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="gesture-emoji">✋</div>
-                <div className="gesture-name">No gesture</div>
-                <div className="gesture-phrase">Show your hand to the camera</div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-
-        {/* Right — Chat */}
-        <section className="chat-section">
-          <div className="section-label">
-            <MessageCircle size={14} /> Live Chat
-            <span className="firebase-badge">🔥 Firebase</span>
-          </div>
-
-          <div className="chat-window">
-            <AnimatePresence>
-              {messages.length === 0 && (
-                <div className="chat-empty">
-                  <MessageCircle size={32} strokeWidth={1.2} />
-                  <p>No messages yet</p>
-                  <span>Start signing to send messages</span>
-                </div>
-              )}
-              {messages.map((msg, i) => (
-                <motion.div key={i}
-                  initial={{ opacity: 0, y: 8 }}
+          {/* Gesture + stats row */}
+          <div className="gesture-row">
+            <AnimatePresence mode="wait">
+              {gesture ? (
+                <motion.div key={gesture} className="gesture-card"
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`message ${msg.sos ? "sos" : msg.sender === "signer" ? "right" : "left"}`}>
-                  {msg.sos ? (
-                    <div className="bubble sos-bubble">
-                      <AlertTriangle size={14} /> SOS ALERT — Emergency!
-                    </div>
-                  ) : (
-                    <div className="bubble">
-                      {msg.sender === "signer" && <span className="msg-icon">🤟 </span>}
-                      {msg.message}
-                      <span className="msg-time">
-                        {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
-                      </span>
-                    </div>
-                  )}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}>
+                  <div className="gesture-emoji">🤟</div>
+                  <div className="gesture-name">{gesture}</div>
+                  <div className="gesture-phrase">{PHRASES[lang][gesture]}</div>
+                  <div className="confidence-bar-wrapper">
+                    <div className="confidence-bar" style={{ width: `${confidence}%` }} />
+                  </div>
+                  <div className="confidence-label">{confidence}% confidence</div>
                 </motion.div>
-              ))}
+              ) : (
+                <motion.div key="empty" className="gesture-card empty"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <div className="gesture-emoji">✋</div>
+                  <div className="gesture-name">No gesture detected</div>
+                  <div className="gesture-phrase">Show your hand to the camera</div>
+                </motion.div>
+              )}
             </AnimatePresence>
-            <div ref={chatEndRef} />
+
+            {/* Quick stats */}
+            <div className="quick-stats">
+              <div className="quick-stat">
+                <span className="qs-icon">🧠</span>
+                <span className="qs-label">Model</span>
+                <span className="qs-val">SVM</span>
+              </div>
+              <div className="quick-stat">
+                <span className="qs-icon">🎯</span>
+                <span className="qs-label">Accuracy</span>
+                <span className="qs-val">100%</span>
+              </div>
+              <div className="quick-stat">
+                <span className="qs-icon">🤟</span>
+                <span className="qs-label">Gestures</span>
+                <span className="qs-val">5</span>
+              </div>
+              <div className="quick-stat">
+                <span className="qs-icon">🌐</span>
+                <span className="qs-label">Languages</span>
+                <span className="qs-val">EN / HI</span>
+              </div>
+            </div>
           </div>
 
-          <div className="chat-input">
-            <input
-              type="text"
-              placeholder="Type a reply..."
-              value={replyText}
-              onChange={e => setReplyText(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendReply()}
-            />
-            <button className="send-btn" onClick={sendReply}>
-              <Send size={16} />
-            </button>
+          {/* Gesture guide */}
+          <div className="gesture-guide">
+            <div className="guide-title">Gesture Guide</div>
+            <div className="guide-grid">
+              {[
+                { g: "hello", e: "🖐", d: "Open palm" },
+                { g: "yes", e: "👍", d: "Thumbs up" },
+                { g: "no", e: "☝️", d: "Index up" },
+                { g: "thankyou", e: "🤲", d: "Flat hand" },
+                { g: "help", e: "✊", d: "Closed fist" },
+              ].map(item => (
+                <div key={item.g} className={`guide-item ${gesture === item.g ? "active" : ""}`}>
+                  <span className="guide-emoji">{item.e}</span>
+                  <span className="guide-name">{item.g}</span>
+                  <span className="guide-desc">{item.d}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>

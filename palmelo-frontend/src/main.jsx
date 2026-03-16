@@ -7,7 +7,9 @@ import App from './App.jsx'
 import Home from './Home.jsx'
 import Login from './Login.jsx'
 import Profile from './Profile.jsx'
+import Chat from './Chat.jsx'
 import './index.css'
+import Learn from './Learn.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -22,6 +24,12 @@ createRoot(document.getElementById('root')).render(
           <Route path="/profile" element={
             <ProtectedRoute><Profile /></ProtectedRoute>
           } />
+          <Route path="/chat" element={
+            <ProtectedRoute><Chat /></ProtectedRoute>
+          } />
+          <Route path="/learn" element={
+  <ProtectedRoute><Learn /></ProtectedRoute>
+} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
