@@ -35,7 +35,7 @@ export default function Profile() {
     <div className="profile-page">
       <nav className="profile-nav">
         <button className="back-btn" onClick={() => navigate("/app")}>← Back to App</button>
-        <div className="profile-nav-logo">🤟 Palmelo</div>
+        <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img" />
         <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={15} /> Sign out
         </button>

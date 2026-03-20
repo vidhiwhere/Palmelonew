@@ -116,7 +116,7 @@ export default function App() {
       {/* Header */}
       <header className="header">
         <div className="header-left">
-          <span className="logo">🤟 Palmelo</span>
+          <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img" />
           <span className="tagline">Sign Language to Speech</span>
         </div>
         <div className="header-right">

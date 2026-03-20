@@ -109,3 +109,19 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+.nav-logo-img {
+  height: 90px;
+  width: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.login-logo-img {
+  height: 48px;
+  margin-bottom: 8px;
+}
+.learn-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

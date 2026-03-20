@@ -37,7 +37,7 @@ export default function Home() {
     <div className="home">
       {/* Navbar */}
       <nav className="home-nav">
-        <div className="home-nav-logo">🤟 Palmelo</div>
+        <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img" />
         <div className="home-nav-links">
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
@@ -57,7 +57,6 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}>
-            🏆 AI for Social Good · Hackathon 2026
           </motion.div>
 
           <motion.h1 className="hero-title"
@@ -81,10 +80,7 @@ export default function Home() {
 
           <motion.div className="hero-stats"
             variants={fadeUp} initial="hidden" animate="visible" custom={4}>
-            <div className="stat">
-              <span className="stat-num">70M+</span>
-              <span className="stat-label">Sign language users</span>
-            </div>
+            
             <div className="stat-divider" />
             <div className="stat">
               <span className="stat-num">100%</span>

@@ -333,7 +333,10 @@ export default function Learn() {
         <button className="learn-back" onClick={() => navigate("/app")}>
           <ArrowLeft size={16} /> Back
         </button>
-        <div className="learn-title">🤟 Learn Sign Language</div>
+        <div className="learn-title-wrap">
+  <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img" />
+  <span>Learn Sign Language</span>
+</div>
         <div className="learn-nav-right">
           <div className="progress-pill">
             ✅ {totalLearned} learned

@@ -161,7 +161,7 @@ export default function Chat() {
       {/* Sidebar */}
       <aside className="chat-sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-brand">🤟 Palmelo</div>
+          <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img login-logo-img" />
           <div className="sidebar-user">
             <div className="sidebar-avatar">
               {user?.photoURL

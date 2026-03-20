@@ -50,7 +50,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-left">
-        <div className="login-brand">🤟 Palmelo</div>
+ <img src="/src/assets/logo.png" alt="Palmelo" className="nav-logo-img login-logo-img" />
         <h1>Breaking barriers with <span>sign language</span></h1>
         <p>AI-powered real-time sign language to speech translator. Inclusive communication for everyone.</p>
         <div className="login-stats">
@@ -81,7 +81,7 @@ export default function Login() {
             {isSignup && (
               <div className="input-group">
                 <label>Full Name</label>
-                <input type="text" placeholder="Vidhi Kumar"
+                <input type="text" placeholder="Vidhi Kumari"
                   value={name} onChange={e => setName(e.target.value)} required />
               </div>
             )}
