@@ -52,7 +52,7 @@ export default function App() {
       formData.append("file", blob, "frame.jpg");
 
       try {
-        const res = await fetch("https://palmelonew.onrender.com/detect", {
+        const res = await fetch("http://localhost:8000/detect", {
           method: "POST",
           body: formData,
         });
