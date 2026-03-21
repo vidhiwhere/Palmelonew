@@ -17,6 +17,11 @@ app.add_middleware(
 with open("models/gesture_model.pkl", "rb") as f:
     model = pickle.load(f)
 
+# New mediapipe API
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import mediapipe as mp
+
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.7)
 
