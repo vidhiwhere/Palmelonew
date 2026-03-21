@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
-import mediapipe as mp
 import pickle
 import numpy as np
 
@@ -17,13 +16,33 @@ app.add_middleware(
 with open("models/gesture_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# New mediapipe API
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 import mediapipe as mp
+from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.components import containers
+from mediapipe.tasks import python
 
-mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.7)
+# Download hand landmarker model
+import urllib.request
+import os
+
+MODEL_PATH = "hand_landmarker.task"
+if not os.path.exists(MODEL_PATH):
+    print("Downloading hand landmarker model...")
+    urllib.request.urlretrieve(
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        MODEL_PATH
+    )
+    print("Model downloaded!")
+
+base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
+options = vision.HandLandmarkerOptions(
+    base_options=base_options,
+    num_hands=2,
+    min_hand_detection_confidence=0.5,
+    min_hand_presence_confidence=0.5,
+    min_tracking_confidence=0.5
+)
+detector = vision.HandLandmarker.create_from_options(options)
 
 PHRASES = {
     "hello": "Hello there!",
@@ -46,14 +65,16 @@ async def detect_gesture(file: UploadFile = File(...)):
     nparr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    result = hands.process(rgb)
 
-    if result.multi_hand_landmarks:
-        landmarks = result.multi_hand_landmarks
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+    result = detector.detect(mp_image)
+
+    if result.hand_landmarks:
+        landmarks = result.hand_landmarks
         row = []
         for hand_idx in range(2):
             if hand_idx < len(landmarks):
-                lm = landmarks[hand_idx].landmark
+                lm = landmarks[hand_idx]
                 row += [val for p in lm for val in (p.x, p.y)]
             else:
                 row += [0.0] * 42
