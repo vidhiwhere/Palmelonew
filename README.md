@@ -7,6 +7,8 @@ Palmelo is a full-stack web application that uses computer vision and machine le
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-palmelonew.vercel.app-00b894?style=for-the-badge)](https://palmelonew.vercel.app)
 [![GitHub](https://img.shields.io/badge/GitHub-vidhiwhere%2FPalmelonew-1a1a2e?style=for-the-badge&logo=github)](https://github.com/vidhiwhere/Palmelonew)
 
+> ⚠️ **Important Note:** The Python backend (gesture detection) is **NOT deployed** on any cloud server due to MediaPipe compatibility issues with cloud Linux environments. To use gesture detection, you must run the backend locally. The frontend (homepage, login, chat, learn, profile) works fully on the live Vercel URL without the backend.
+
 ---
 
 ## 📋 Table of Contents
@@ -18,13 +20,14 @@ Palmelo is a full-stack web application that uses computer vision and machine le
 - [Installation & Setup](#-installation--setup)
 - [Running Locally](#-running-locally)
 - [Supported Gestures](#-supported-gestures)
-- [Environment Variables](#-environment-variables)
 - [Firebase Setup](#-firebase-setup)
 - [ML Model Training](#-ml-model-training)
 - [API Reference](#-api-reference)
 - [Deployment](#-deployment)
-- [Screenshots](#-screenshots)
-- [Contributing](#-contributing)
+- [Application Routes](#-application-routes)
+- [Common Issues & Fixes](#-common-issues--fixes)
+- [Cost Analysis](#-cost-analysis)
+- [Future Scope](#-future-scope)
 
 ---
 
@@ -56,12 +59,12 @@ Palmelo is a full-stack web application that uses computer vision and machine le
 | Firebase SDK | 10.x | Auth, Realtime DB |
 | Lucide React | 0.383.x | Icons |
 | Emoji Picker React | 4.x | Emoji picker in chat |
-| TensorFlow.js | Latest | In-browser hand detection (deployed version) |
+| TensorFlow.js | Latest | In-browser hand detection (future) |
 
 ### Backend
 | Technology | Version | Purpose |
 |---|---|---|
-| Python | 3.10+ | Backend language |
+| Python | 3.10 – 3.11 | Backend language |
 | FastAPI | Latest | REST API framework |
 | Uvicorn | Latest | ASGI server |
 | MediaPipe | 0.10.9 | Hand landmark detection |
@@ -73,13 +76,13 @@ Palmelo is a full-stack web application that uses computer vision and machine le
 | Firebase Admin | Latest | Firebase server SDK |
 
 ### Infrastructure
-| Service | Purpose |
-|---|---|
-| Firebase Realtime Database | Real-time messaging and user data |
-| Firebase Authentication | User login with Google OAuth |
-| Vercel | Frontend deployment |
-| Render | Python backend hosting |
-| GitHub | Version control |
+| Service | Status | Purpose |
+|---|---|---|
+| Firebase Realtime Database | ✅ Live | Real-time messaging and user data |
+| Firebase Authentication | ✅ Live | User login with Google OAuth |
+| Vercel | ✅ Live | Frontend deployment |
+| Backend (FastAPI) | ⚠️ Local only | Gesture detection — NOT deployed |
+| GitHub | ✅ Live | Version control |
 
 ---
 
@@ -192,7 +195,7 @@ pip install -r requirements.txt
 
 > 💡 If `requirements.txt` is missing, install manually:
 ```bash
-pip install fastapi uvicorn opencv-python mediapipe==0.10.9 scikit-learn==1.7.2 numpy python-multipart gtts pygame streamlit firebase-admin pyttsx3 pandas
+pip install fastapi uvicorn opencv-python mediapipe==0.10.9 scikit-learn==1.7.2 numpy python-multipart gtts pygame streamlit firebase-admin pyttsx3 pandas protobuf==3.20.3
 ```
 
 ### Step 3 — Frontend Setup (React)
@@ -207,39 +210,7 @@ npm install
 
 ### Step 4 — Firebase Setup
 
-1. Go to [firebase.google.com](https://firebase.google.com) and create a project named **Palmelo**
-2. Enable **Realtime Database** → Start in test mode
-3. Enable **Authentication** → Email/Password + Google
-4. Go to Project Settings → Service Accounts → Generate new private key
-5. Save the downloaded JSON file as `palmelo/firebase_key.json`
-6. Go to Project Settings → Your Apps → Web App → copy the config
-
-Update `palmelo-frontend/src/firebase.js` with your config:
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
-
-7. Set Firebase Realtime Database rules:
-```json
-{
-  "rules": {
-    ".read": true,
-    ".write": true,
-    "messages": { ".indexOn": ["timestamp"] },
-    "users": { ".indexOn": ["email"] },
-    "chats": { ".indexOn": ["timestamp"] },
-    "typing": { ".indexOn": ["timestamp"] }
-  }
-}
-```
+See the [Firebase Setup](#-firebase-setup) section below.
 
 ---
 
@@ -263,7 +234,7 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 INFO:     Application startup complete.
 ```
 
-Verify the backend is working: open `http://localhost:8000/health` → should show `{"status":"ok"}`
+Verify: open `http://localhost:8000/health` → should show `{"status":"ok"}`
 
 ### Terminal 2 — Start the React Frontend
 
@@ -309,14 +280,41 @@ Open your browser and go to: **`http://localhost:5173`**
 
 ---
 
-## 🔧 Environment Variables
+## 🔥 Firebase Setup
 
-No `.env` file is needed. All configuration is hardcoded in:
-- `palmelo-frontend/src/firebase.js` — Firebase config
-- `palmelo/app/firebase_chat.py` — Firebase admin config
-- `palmelo-frontend/src/App.jsx` — Backend URL
+1. Go to [firebase.google.com](https://firebase.google.com) and create a project named **Palmelo**
+2. Enable **Realtime Database** → Start in test mode
+3. Enable **Authentication** → Email/Password + Google
+4. Go to Project Settings → Service Accounts → Generate new private key
+5. Save the downloaded JSON file as `palmelo/firebase_key.json`
+6. Go to Project Settings → Your Apps → Web App → copy the config
 
-For production, move sensitive values to environment variables.
+Update `palmelo-frontend/src/firebase.js` with your config:
+```javascript
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+```
+
+Set Firebase Realtime Database rules:
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "messages": { ".indexOn": ["timestamp"] },
+    "users": { ".indexOn": ["email"] },
+    "chats": { ".indexOn": ["timestamp"] },
+    "typing": { ".indexOn": ["timestamp"] }
+  }
+}
+```
 
 ---
 
@@ -330,7 +328,6 @@ cd palmelo
 venv\Scripts\activate
 python collect_data.py
 ```
-- Follow on-screen instructions
 - Press **SPACE** to start recording each gesture
 - Each gesture collects 120 samples
 - Data saved to `data/gestures.csv`
@@ -339,8 +336,6 @@ python collect_data.py
 ```bash
 python train_model.py
 ```
-- Trains SVM with RBF kernel
-- Prints accuracy per gesture
 - Saves model to `models/gesture_model.pkl`
 
 ### Step 3 — Test the model live
@@ -362,7 +357,9 @@ python test_model.py
 
 ## 📡 API Reference
 
-Base URL: `http://localhost:8000`
+Base URL (local only): `http://localhost:8000`
+
+> ⚠️ Backend is NOT deployed. Run locally using instructions above.
 
 ### POST `/detect`
 Detect gesture from a webcam frame image.
@@ -405,9 +402,6 @@ Classify gesture from pre-extracted landmarks.
 ```
 
 ### GET `/health`
-Health check endpoint.
-
-**Response:**
 ```json
 { "status": "ok" }
 ```
@@ -416,38 +410,51 @@ Health check endpoint.
 
 ## 🌍 Deployment
 
-### Frontend — Vercel
+### Frontend — Vercel ✅ Live
+**URL:** https://palmelonew.vercel.app
+
 ```bash
 cd palmelo-frontend
 npm run build
-# Deploy dist/ folder to Vercel
-# Or connect GitHub repo to Vercel for auto-deploy
+# Connect GitHub repo to Vercel for auto-deploy
 ```
 
-### Backend — Render
-1. Connect GitHub repo to Render
-2. Set Root Directory: `palmelo`
-3. Build Command: `pip install -r requirements.txt`
-4. Start Command: `uvicorn backend:app --host 0.0.0.0 --port $PORT`
+### Backend — ⚠️ NOT Deployed (Local Only)
 
-### Update backend URL for production
-In `palmelo-frontend/src/App.jsx`:
-```javascript
-const res = await fetch("https://your-render-url.onrender.com/detect", {
+> The Python backend is **NOT currently deployed** on any cloud server.
+>
+> **Reason:** MediaPipe's `solutions` API is incompatible with Python 3.14 on Render's free tier Linux environment. Every deployment attempt failed with:
+> ```
+> AttributeError: module 'mediapipe' has no attribute 'solutions'
+> ```
+>
+> **Workaround:** Run the backend locally using the steps in [Running Locally](#-running-locally).
+>
+> **Future Plan:** Migrate gesture detection entirely to the browser using TensorFlow.js HandPose Detection — eliminating the need for a Python backend completely.
+
+To run locally and connect to frontend:
+```bash
+# Terminal 1 - Backend
+cd palmelo
+venv\Scripts\activate
+uvicorn backend:app --reload --port 8000
+
+# In App.jsx - use localhost URL
+const res = await fetch("http://localhost:8000/detect", {
 ```
 
 ---
 
 ## 🗺 Application Routes
 
-| Route | Page | Auth Required |
-|---|---|---|
-| `/` | Homepage | ❌ No |
-| `/login` | Login / Sign Up | ❌ No |
-| `/app` | Gesture Detection | ✅ Yes |
-| `/chat` | Private Messaging | ✅ Yes |
-| `/learn` | Sign Language Learning | ✅ Yes |
-| `/profile` | User Profile | ✅ Yes |
+| Route | Page | Auth Required | Works Without Backend |
+|---|---|---|---|
+| `/` | Homepage | ❌ No | ✅ Yes |
+| `/login` | Login / Sign Up | ❌ No | ✅ Yes |
+| `/app` | Gesture Detection | ✅ Yes | ❌ No (needs local backend) |
+| `/chat` | Private Messaging | ✅ Yes | ✅ Yes |
+| `/learn` | Sign Language Learning | ✅ Yes | ✅ Yes |
+| `/profile` | User Profile | ✅ Yes | ✅ Yes |
 
 ---
 
@@ -457,7 +464,6 @@ const res = await fetch("https://your-render-url.onrender.com/detect", {
 ```
 AttributeError: module 'mediapipe' has no attribute 'solutions'
 ```
-**Fix:** Install the correct version:
 ```bash
 pip uninstall mediapipe -y
 pip install mediapipe==0.10.9
@@ -467,7 +473,6 @@ pip install mediapipe==0.10.9
 ```
 ModuleNotFoundError: No module named 'cv2'
 ```
-**Fix:**
 ```bash
 pip install opencv-python
 ```
@@ -476,33 +481,25 @@ pip install opencv-python
 ```
 AttributeError: 'SymbolDatabase' object has no attribute 'GetPrototype'
 ```
-**Fix:**
 ```bash
 pip install protobuf==3.20.3
 ```
 
 ### Webcam not detected
-```
-Camera error: NotAllowedError
-```
-**Fix:** Allow camera permissions in your browser settings.
+Allow camera permissions in your browser settings.
 
 ### Backend CORS error
-```
-Access to fetch has been blocked by CORS policy
-```
-**Fix:** Make sure `backend.py` has CORS middleware configured for all origins.
+Make sure `backend.py` has CORS middleware configured for all origins.
 
 ### Port already in use
-```
-ERROR: [Errno 10048] error while attempting to bind on address
-```
-**Fix:**
 ```bash
-# Windows — kill process on port 8000
+# Windows
 netstat -ano | findstr :8000
 taskkill /PID <PID> /F
 ```
+
+### Gesture detection not working on live site
+Backend is not deployed. Run locally and update `App.jsx` URL to `http://localhost:8000`.
 
 ---
 
@@ -520,6 +517,7 @@ taskkill /PID <PID> /F
 
 - [ ] Indian Sign Language (ISL) support
 - [ ] Mobile app (React Native) for iOS and Android
+- [ ] Migrate gesture detection to TensorFlow.js (no backend needed)
 - [ ] Bidirectional mode — sign avatar for non-signers
 - [ ] 100+ gestures covering all daily scenarios
 - [ ] Offline mode — on-device model inference
@@ -535,12 +533,6 @@ taskkill /PID <PID> /F
 **Vidhi Kumari**
 - GitHub: [@vidhiwhere](https://github.com/vidhiwhere)
 - Email: vidhikumari6025@gmail.com
-
----
-
-## 📄 License
-
-This project was built for the CodeSangram Online Hackathon 2026 at Poornima University.
 
 ---
 
